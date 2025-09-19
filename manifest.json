@@ -1,23 +1,23 @@
 {
-	"manifest_version": 2,
+	"manifest_version": 3,
 	"name": "Windows Switcher",
 	"short_name": "WindowsSwitcher",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Allow you to switch between windows.",
 	"author": "Orel Eraki - oreleraki@gmail.com",
 	"homepage_url": "http://www.oreleraki.com",
-
 	"icons": {
 		"128": "icons/window-switcher-128.png"
 	},
-	"browser_action": {
+	"action": {
 		"default_icon": "icons/window-switcher-128.png",
-		"name": "Switch"
+		"default_title": "Switch"
 	},
 	"background": {
-		"scripts":["background.js"]
+		"service_worker": "background.js"
 	},
 	"permissions": [
-		"tabs"
+		"tabs",
+		"windows"
 	]
 }
