@@ -1,49 +1,46 @@
-var currentWindowsIds = [];
-var currentFocusedWindowId;
+let currentWindowsIds = [];
+let currentFocusedWindowId;
 
-function init() {
-	chrome.windows.getAll(function (windows) {
-		currentWindowsIds = windows.map(win => win.id);
-	});
+async function init() {
+  const windows = await chrome.windows.getAll();
+  currentWindowsIds = windows.map(win => win.id);
 
-	chrome.windows.getCurrent(function (window) {
-		if (window.focused) {
-			currentFocusedWindowId = window;
-		}
-		else {
-			console.log("Couldn't locate initial focused window.");
-		}
-	})
+  const window = await chrome.windows.getCurrent();
+  if (window && window.focused) {
+    currentFocusedWindowId = window.id;
+  } else {
+    console.log("Couldn't locate initial focused window.");
+  }
 }
 
-function setCurrentFocusedWindowId() {
-	chrome.windows.getCurrent(function (window) { currentFocusedWindowId = window.id });
+async function setCurrentFocusedWindowId() {
+  const window = await chrome.windows.getCurrent();
+  if (window) currentFocusedWindowId = window.id;
 }
 
 function getNextFocusedWindowId() {
-	const currentFocusPos = currentWindowsIds.indexOf(currentFocusedWindowId);
-	const nextWindowPos = (currentFocusPos+1)%currentWindowsIds.length;
-	const nextWindowId = currentWindowsIds[nextWindowPos];
-	return nextWindowId;
+  const currentFocusPos = currentWindowsIds.indexOf(currentFocusedWindowId);
+  if (currentFocusPos === -1 || currentWindowsIds.length === 0) return undefined;
+  const nextWindowPos = (currentFocusPos + 1) % currentWindowsIds.length;
+  const nextWindowId = currentWindowsIds[nextWindowPos];
+  return nextWindowId;
 }
 
-function onClicked() {
-	const focusWinId = getNextFocusedWindowId();
-	if (focusWinId === undefined) {
-		console.log("There is no current focused window.");
-		return;
-	}
-
-	chrome.windows.update(focusWinId, { focused: true }, function (window) {
-		if (window.focused == true) {
-			currentFocusedWindowId = window.id;
-		}
-	});
+async function onClicked() {
+  const focusWinId = getNextFocusedWindowId();
+  if (focusWinId === undefined) {
+    console.log("There is no current focused window.");
+    return;
+  }
+  const window = await chrome.windows.update(focusWinId, { focused: true });
+  if (window && window.focused === true) {
+    currentFocusedWindowId = window.id;
+  }
 }
 
 chrome.windows.onRemoved.addListener(init);
 chrome.windows.onCreated.addListener(init);
 chrome.windows.onFocusChanged.addListener(setCurrentFocusedWindowId);
-chrome.browserAction.onClicked.addListener(onClicked);
+chrome.action.onClicked.addListener(onClicked);
 
 init();
